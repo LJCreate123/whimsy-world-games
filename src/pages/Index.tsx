@@ -9,7 +9,7 @@ const Index = () => {
     {
       id: 'tic-tac-toe',
       title: 'Tic-Tac-Toe',
-      description: 'Classic game of X's and O's. Challenge yourself or play with a friend!',
+      description: 'Classic game of X\'s and O\'s. Challenge yourself or play with a friend!',
       icon: <Grid3X3 className="h-12 w-12" />,
       path: '/tictactoe',
       color: 'bg-game-primary'
