@@ -2,8 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/3f47c4c6-17b7-48c9-88bf-2d39bc2f0ecf
-
+**URL**: https://whimsy-world-games.lovable.app
 ## How can I edit this code?
 
 There are several ways of editing your application.
@@ -62,12 +61,4 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/3f47c4c6-17b7-48c9-88bf-2d39bc2f0ecf) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Simply open [Lovable]https://whimsy-world-games.lovable.app
