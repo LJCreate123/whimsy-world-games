@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -14,7 +13,6 @@ const WhacAMole: React.FC = () => {
   const [moleSpeed, setMoleSpeed] = useState(1000); // milliseconds
 
   useEffect(() => {
-    // Load high score from localStorage
     const savedHighScore = localStorage.getItem('whacAMoleHighScore');
     if (savedHighScore) {
       setHighScore(parseInt(savedHighScore));
@@ -26,11 +24,9 @@ const WhacAMole: React.FC = () => {
     let timerInterval: number;
     
     if (gameActive) {
-      // Start mole appearance interval
       moleInterval = window.setInterval(() => {
         setActiveMole(Math.floor(Math.random() * 9));
         
-        // Speed up the game gradually
         if (timeLeft < 20 && moleSpeed > 800) {
           setMoleSpeed(800);
         } else if (timeLeft < 15 && moleSpeed > 700) {
@@ -42,16 +38,13 @@ const WhacAMole: React.FC = () => {
         }
       }, moleSpeed);
 
-      // Start timer countdown
       timerInterval = window.setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            // Game over
             clearInterval(moleInterval);
             clearInterval(timerInterval);
             setGameActive(false);
             
-            // Check for high score
             if (score > highScore) {
               setHighScore(score);
               localStorage.setItem('whacAMoleHighScore', score.toString());
@@ -90,7 +83,7 @@ const WhacAMole: React.FC = () => {
   const whacMole = (index: number) => {
     if (gameActive && index === activeMole) {
       setScore((prev) => prev + 1);
-      setActiveMole(null); // Hide the mole
+      setActiveMole(null);
     }
   };
 
@@ -153,25 +146,54 @@ const WhacAMole: React.FC = () => {
                 <div
                   key={index}
                   onClick={() => whacMole(index)}
-                  className={`
-                    relative aspect-square bg-yellow-800 rounded-lg overflow-hidden cursor-pointer
-                    shadow-inner flex items-end justify-center
-                  `}
+                  className="relative aspect-square bg-gradient-to-b from-[#8B5A2B] to-[#6B4226] rounded-lg overflow-hidden cursor-pointer shadow-md"
                 >
+                  <div className="absolute top-0 left-0 w-full h-1/4 bg-gradient-to-b from-green-600 to-green-700 border-b-2 border-green-800">
+                    <div className="absolute bottom-0 w-full">
+                      <div className="flex justify-between px-1">
+                        {Array(6).fill(null).map((_, i) => (
+                          <div key={i} className="w-1 h-2 bg-green-500 rounded-t-sm"></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
                   {activeMole === index && (
                     <div className="absolute bottom-0 w-full h-3/4 animate-pop">
                       <div className="relative w-full h-full">
-                        <div className="absolute bottom-0 w-full h-4/5 bg-brown-600 rounded-t-full overflow-hidden">
-                          <div className="absolute top-1/4 w-full h-1/2 bg-amber-700 rounded-t-full flex flex-col items-center pt-2">
-                            <div className="bg-black w-2 h-2 rounded-full"></div>
-                            <div className="bg-black w-2 h-2 rounded-full mt-1"></div>
-                            <div className="bg-red-400 w-4 h-1 mt-2 rounded-full"></div>
+                        <div className="absolute bottom-0 w-full h-4/5 bg-gradient-to-b from-[#A67C52] to-[#8B5A2B] rounded-t-full overflow-hidden">
+                          <div className="absolute top-1/4 w-full h-1/2 flex flex-col items-center pt-1">
+                            <div className="flex space-x-4 mb-1">
+                              <div className="w-3 h-3 bg-white rounded-full relative">
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-black rounded-full"></div>
+                              </div>
+                              <div className="w-3 h-3 bg-white rounded-full relative">
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-black rounded-full"></div>
+                              </div>
+                            </div>
+                            
+                            <div className="w-4 h-2 bg-pink-800 rounded-full mt-1"></div>
+                            
+                            <div className="w-6 h-2 mt-1 bg-gradient-to-b from-[#7B3F00] to-[#512800] rounded-b-lg"></div>
+
+                            <div className="flex space-x-1 -mt-2">
+                              <div className="w-1 h-1 bg-white"></div>
+                              <div className="w-1 h-1 bg-white"></div>
+                            </div>
+                            
+                            <div className="flex justify-between w-full px-2 -mt-3">
+                              <div className="w-2 h-2 bg-pink-300 rounded-full opacity-60"></div>
+                              <div className="w-2 h-2 bg-pink-300 rounded-full opacity-60"></div>
+                            </div>
+                          </div>
+                          
+                          <div className="absolute bottom-0 w-full flex justify-center">
+                            <div className="w-1/2 h-2 bg-[#A67C52] rounded-t-lg"></div>
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
-                  <div className="absolute top-0 left-0 w-full h-1/4 bg-green-600 border-b-2 border-green-800"></div>
                 </div>
               ))}
             </div>
