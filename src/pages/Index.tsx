@@ -2,7 +2,11 @@
 import React from 'react';
 import Navbar from '@/components/Layout/Navbar';
 import GameCard from '@/components/Layout/GameCard';
-import { Dices, Grid3X3, Brain, Gamepad2 } from 'lucide-react';
+import { 
+  Dices, Grid3X3, Brain, Gamepad2, BookOpen, Music, 
+  Rabbit, Puzzle, Palette, HelpCircle, Bomb, Calculator,
+  Zap, Maze
+} from 'lucide-react';
 
 const Index = () => {
   const games = [
@@ -29,6 +33,86 @@ const Index = () => {
       icon: <Dices className="h-12 w-12" />,
       path: '/whac-a-mole',
       color: 'bg-game-accent'
+    },
+    {
+      id: 'word-scramble',
+      title: 'Word Scramble',
+      description: 'Unscramble letters to form words as fast as you can!',
+      icon: <BookOpen className="h-12 w-12" />,
+      path: '/word-scramble',
+      color: 'bg-blue-500'
+    },
+    {
+      id: 'simon-says',
+      title: 'Simon Says',
+      description: 'Test your memory by repeating the sequence of colors and sounds.',
+      icon: <Music className="h-12 w-12" />,
+      path: '/simon-says',
+      color: 'bg-green-500'
+    },
+    {
+      id: 'snake-game',
+      title: 'Snake Game',
+      description: 'Control a growing snake to eat food without hitting walls or yourself!',
+      icon: <Rabbit className="h-12 w-12" />,
+      path: '/snake-game',
+      color: 'bg-emerald-500'
+    },
+    {
+      id: 'puzzle-slider',
+      title: 'Puzzle Slider',
+      description: 'Slide tiles to arrange them in the correct order to complete the image.',
+      icon: <Puzzle className="h-12 w-12" />,
+      path: '/puzzle-slider',
+      color: 'bg-indigo-500'
+    },
+    {
+      id: 'color-match',
+      title: 'Color Match',
+      description: 'Match colors to their written names, but watch out for the tricky ones!',
+      icon: <Palette className="h-12 w-12" />,
+      path: '/color-match',
+      color: 'bg-pink-500'
+    },
+    {
+      id: 'quiz-challenge',
+      title: 'Quiz Challenge',
+      description: 'Test your knowledge across various categories with fun trivia questions.',
+      icon: <HelpCircle className="h-12 w-12" />,
+      path: '/quiz-challenge',
+      color: 'bg-yellow-500'
+    },
+    {
+      id: 'balloon-pop',
+      title: 'Balloon Pop',
+      description: 'Pop balloons as they float up before they escape!',
+      icon: <Bomb className="h-12 w-12" />,
+      path: '/balloon-pop',
+      color: 'bg-red-500'
+    },
+    {
+      id: 'math-blaster',
+      title: 'Math Blaster',
+      description: 'Solve math equations as quickly as you can to earn points!',
+      icon: <Calculator className="h-12 w-12" />,
+      path: '/math-blaster',
+      color: 'bg-purple-500'
+    },
+    {
+      id: 'reaction-test',
+      title: 'Reaction Test',
+      description: 'Test your reflexes by clicking targets as fast as possible!',
+      icon: <Zap className="h-12 w-12" />,
+      path: '/reaction-test',
+      color: 'bg-orange-500'
+    },
+    {
+      id: 'maze-solver',
+      title: 'Maze Solver',
+      description: 'Navigate through increasingly difficult mazes against the clock!',
+      icon: <Maze className="h-12 w-12" />,
+      path: '/maze-solver',
+      color: 'bg-cyan-500'
     }
   ];
 
