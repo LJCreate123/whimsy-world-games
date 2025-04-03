@@ -20,9 +20,9 @@ const SnakeGame: React.FC = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [speed, setSpeed] = useState(INITIAL_SPEED);
-  const gameLoopRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const lastRenderTimeRef = useRef<number>(0);
+  const requestRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
   const directionQueueRef = useRef<Direction[]>([]);
 
   useEffect(() => {
@@ -36,15 +36,58 @@ const SnakeGame: React.FC = () => {
     window.addEventListener('keydown', handleKeyPress);
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
-      if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }, []);
 
   useEffect(() => {
-    if (gameActive) {
-      renderGame();
+    renderGame();
+  }, [snake, food]);
+
+  useEffect(() => {
+    if (!gameActive) {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
+      }
+      return;
     }
-  }, [snake, food, gameActive]);
+
+    // Start game loop
+    lastTimeRef.current = 0;
+    const animate = (time: number) => {
+      if (time - lastTimeRef.current >= speed) {
+        lastTimeRef.current = time;
+        
+        // Process direction queue
+        if (directionQueueRef.current.length > 0) {
+          const nextDirection = directionQueueRef.current.shift();
+          if (nextDirection) {
+            // Prevent 180-degree turns
+            if (
+              !(nextDirection === 'UP' && direction === 'DOWN') &&
+              !(nextDirection === 'DOWN' && direction === 'UP') &&
+              !(nextDirection === 'LEFT' && direction === 'RIGHT') &&
+              !(nextDirection === 'RIGHT' && direction === 'LEFT')
+            ) {
+              setDirection(nextDirection);
+            }
+          }
+        }
+        
+        updateGame();
+      }
+      requestRef.current = requestAnimationFrame(animate);
+    };
+    
+    requestRef.current = requestAnimationFrame(animate);
+    
+    return () => {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [gameActive, direction, speed]);
 
   const startGame = () => {
     // Reset game state
@@ -56,120 +99,82 @@ const SnakeGame: React.FC = () => {
     setGameActive(true);
     directionQueueRef.current = [];
     
-    // Start game loop
-    if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
-    lastRenderTimeRef.current = 0;
-    requestAnimationFrame(gameLoop);
-    
     toast('Game Started!', {
       description: 'Use arrow keys or on-screen controls to move the snake!'
     });
   };
 
-  const gameLoop = (timestamp: number) => {
-    if (!gameActive) return;
-    
-    gameLoopRef.current = requestAnimationFrame(gameLoop);
-    
-    // Control game speed
-    if (timestamp - lastRenderTimeRef.current < speed) return;
-    lastRenderTimeRef.current = timestamp;
-    
-    // Process next direction from queue if available
-    if (directionQueueRef.current.length > 0) {
-      const nextDirection = directionQueueRef.current.shift();
-      if (nextDirection) {
-        // Prevent 180-degree turns
-        if (
-          !(nextDirection === 'UP' && direction === 'DOWN') &&
-          !(nextDirection === 'DOWN' && direction === 'UP') &&
-          !(nextDirection === 'LEFT' && direction === 'RIGHT') &&
-          !(nextDirection === 'RIGHT' && direction === 'LEFT')
-        ) {
-          setDirection(nextDirection);
-        }
-      }
-    }
-    
-    updateGame();
-  };
-
   const updateGame = () => {
-    const newSnake = [...snake];
-    const head = { ...newSnake[0] };
-    
-    // Move head based on direction
-    switch (direction) {
-      case 'UP':
-        head.y -= 1;
-        break;
-      case 'DOWN':
-        head.y += 1;
-        break;
-      case 'LEFT':
-        head.x -= 1;
-        break;
-      case 'RIGHT':
-        head.x += 1;
-        break;
-    }
-    
-    // Check for collisions
-    if (
-      head.x < 0 || 
-      head.y < 0 || 
-      head.x >= GRID_SIZE || 
-      head.y >= GRID_SIZE ||
-      snake.some((segment, index) => index > 0 && segment.x === head.x && segment.y === head.y)
-    ) {
-      gameOver();
-      return;
-    }
-    
-    // Check for food
-    if (head.x === food.x && head.y === food.y) {
-      // Eat food
-      newSnake.unshift(head); // Add new head
-      setSnake(newSnake);
-      setFood(generateFoodPosition(newSnake));
-      setScore(prev => prev + 1);
+    setSnake(prevSnake => {
+      const newSnake = [...prevSnake];
+      const head = { ...newSnake[0] };
       
-      // Increase speed every 5 points
-      if (score > 0 && score % 5 === 0) {
-        setSpeed(prevSpeed => Math.max(prevSpeed * 0.9, 60)); // Minimum speed is 60ms
+      // Move head based on direction
+      switch (direction) {
+        case 'UP':
+          head.y -= 1;
+          break;
+        case 'DOWN':
+          head.y += 1;
+          break;
+        case 'LEFT':
+          head.x -= 1;
+          break;
+        case 'RIGHT':
+          head.x += 1;
+          break;
       }
-    } else {
-      // Just move
-      newSnake.unshift(head); // Add new head
-      newSnake.pop(); // Remove tail
-      setSnake(newSnake);
-    }
+      
+      // Check for collisions
+      if (
+        head.x < 0 || 
+        head.y < 0 || 
+        head.x >= GRID_SIZE || 
+        head.y >= GRID_SIZE ||
+        newSnake.some((segment, index) => index > 0 && segment.x === head.x && segment.y === head.y)
+      ) {
+        gameOver();
+        return prevSnake;
+      }
+      
+      // Check for food
+      if (head.x === food.x && head.y === food.y) {
+        // Eat food
+        newSnake.unshift(head); // Add new head
+        setFood(generateFoodPosition(newSnake));
+        setScore(prev => prev + 1);
+        
+        // Increase speed every 5 points
+        if (score > 0 && score % 5 === 0) {
+          setSpeed(prevSpeed => Math.max(prevSpeed * 0.9, 60)); // Minimum speed is 60ms
+        }
+      } else {
+        // Just move
+        newSnake.unshift(head); // Add new head
+        newSnake.pop(); // Remove tail
+      }
+      
+      return newSnake;
+    });
   };
 
   const generateFoodPosition = (snakePositions: Position[]): Position => {
     let newFood: Position;
-    let overlapping = true;
     
-    while (overlapping) {
+    do {
       newFood = {
         x: Math.floor(Math.random() * GRID_SIZE),
         y: Math.floor(Math.random() * GRID_SIZE)
       };
-      
-      overlapping = snakePositions.some(
-        segment => segment.x === newFood.x && segment.y === newFood.y
-      );
-      
-      if (!overlapping) return newFood;
-    }
+    } while (
+      snakePositions.some(segment => segment.x === newFood.x && segment.y === newFood.y)
+    );
     
-    // Fallback (should never reach here)
-    return { x: 0, y: 0 };
+    return newFood;
   };
 
   const gameOver = () => {
     setGameActive(false);
-    if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     
     // Update high score
     if (score > highScore) {
@@ -384,6 +389,7 @@ const SnakeGame: React.FC = () => {
                 <button 
                   className="bg-gray-200 hover:bg-gray-300 p-3 rounded-md flex justify-center"
                   onClick={() => handleDirectionButton('UP')}
+                  aria-label="Move Up"
                 >
                   <ArrowUp className="h-6 w-6" />
                 </button>
@@ -392,18 +398,21 @@ const SnakeGame: React.FC = () => {
                 <button 
                   className="bg-gray-200 hover:bg-gray-300 p-3 rounded-md flex justify-center"
                   onClick={() => handleDirectionButton('LEFT')}
+                  aria-label="Move Left"
                 >
                   <ArrowLeft className="h-6 w-6" />
                 </button>
                 <button 
                   className="bg-gray-200 hover:bg-gray-300 p-3 rounded-md flex justify-center"
                   onClick={() => handleDirectionButton('DOWN')}
+                  aria-label="Move Down"
                 >
                   <ArrowDown className="h-6 w-6" />
                 </button>
                 <button 
                   className="bg-gray-200 hover:bg-gray-300 p-3 rounded-md flex justify-center"
                   onClick={() => handleDirectionButton('RIGHT')}
+                  aria-label="Move Right"
                 >
                   <ArrowRight className="h-6 w-6" />
                 </button>

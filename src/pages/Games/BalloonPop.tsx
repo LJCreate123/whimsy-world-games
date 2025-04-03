@@ -25,7 +25,7 @@ const BalloonPop: React.FC = () => {
   const [missed, setMissed] = useState(0);
   
   const gameAreaRef = useRef<HTMLDivElement>(null);
-  const animationFrameId = useRef<number | null>(null);
+  const requestRef = useRef<number | null>(null);
   const lastBalloonTime = useRef<number>(0);
   
   const colors = [
@@ -61,6 +61,40 @@ const BalloonPop: React.FC = () => {
     };
   }, [gameActive, timeLeft]);
 
+  // Main game animation loop
+  useEffect(() => {
+    if (!gameActive) {
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
+      }
+      return;
+    }
+    
+    const animate = (time: number) => {
+      // Create new balloons based on difficulty
+      if (time - lastBalloonTime.current > (difficulty === 'easy' ? 1200 : difficulty === 'medium' ? 800 : 500)) {
+        createBalloon();
+        lastBalloonTime.current = time;
+      }
+      
+      // Update balloons positions
+      updateBalloons();
+      
+      // Continue the animation loop
+      requestRef.current = requestAnimationFrame(animate);
+    };
+    
+    lastBalloonTime.current = performance.now();
+    requestRef.current = requestAnimationFrame(animate);
+    
+    return () => {
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [gameActive, difficulty]);
+
   const startGame = () => {
     setBalloons([]);
     setScore(0);
@@ -68,12 +102,8 @@ const BalloonPop: React.FC = () => {
     setMissed(0);
     setGameActive(true);
     
-    // Start the game loop
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-    }
+    // Animation loop is handled by the effect
     lastBalloonTime.current = performance.now();
-    animationLoop(performance.now());
     
     toast('Game Started!', {
       description: `Pop the balloons before they float away! Difficulty: ${difficulty}`
@@ -82,9 +112,6 @@ const BalloonPop: React.FC = () => {
 
   const endGame = () => {
     setGameActive(false);
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-    }
     
     if (score > highScore) {
       setHighScore(score);
@@ -99,26 +126,6 @@ const BalloonPop: React.FC = () => {
     }
   };
 
-  const animationLoop = (timestamp: number) => {
-    if (!gameActive) return;
-    
-    // Create new balloons based on difficulty
-    const now = performance.now();
-    const balloonInterval = difficulty === 'easy' ? 1200 : 
-                            difficulty === 'medium' ? 800 : 500;
-    
-    if (now - lastBalloonTime.current > balloonInterval) {
-      createBalloon();
-      lastBalloonTime.current = now;
-    }
-    
-    // Update balloon positions
-    updateBalloons();
-    
-    // Continue the animation loop
-    animationFrameId.current = requestAnimationFrame(animationLoop);
-  };
-
   const createBalloon = () => {
     if (!gameAreaRef.current) return;
     
@@ -127,7 +134,7 @@ const BalloonPop: React.FC = () => {
     
     const size = Math.random() * 20 + 40; // Random size between 40-60
     const x = Math.random() * (gameAreaWidth - size);
-    const y = gameAreaHeight + size; // Start from below the game area
+    const y = gameAreaHeight; // Start from the bottom of the game area
     
     // Different speeds based on difficulty
     const baseSpeed = difficulty === 'easy' ? 1.5 :
@@ -135,7 +142,7 @@ const BalloonPop: React.FC = () => {
     const speed = baseSpeed + Math.random() * 1;
     
     const newBalloon: Balloon = {
-      id: Date.now(),
+      id: Date.now() + Math.random(), // Ensure unique IDs
       x,
       y,
       size,
@@ -158,20 +165,20 @@ const BalloonPop: React.FC = () => {
               y: balloon.y - balloon.speed
             };
           }
-          return balloon;
+          // For popped balloons, make them fall
+          return {
+            ...balloon,
+            y: balloon.y - balloon.speed * 3, // Faster movement when popped
+          };
         })
         .filter(balloon => {
           // Remove balloons that have floated off the top
-          if (balloon.y < -balloon.size && !balloon.popped) {
-            setMissed(prev => prev + 1);
+          if (balloon.y + balloon.size < 0) {
+            if (!balloon.popped) {
+              setMissed(prev => prev + 1);
+            }
             return false;
           }
-          
-          // Remove popped balloons after animation
-          if (balloon.popped && balloon.y < -balloon.size) {
-            return false;
-          }
-          
           return true;
         });
       
@@ -289,17 +296,15 @@ const BalloonPop: React.FC = () => {
             {balloons.map(balloon => (
               <div
                 key={balloon.id}
-                className={`absolute ${balloon.color} rounded-full cursor-pointer transition-transform ${balloon.popped ? 'animate-pop' : 'hover:scale-110'}`}
+                className={`absolute ${balloon.color} rounded-full cursor-pointer transition-transform ${balloon.popped ? 'opacity-50 scale-90' : 'hover:scale-110'}`}
                 style={{
                   width: `${balloon.size}px`,
                   height: `${balloon.size * 1.2}px`,
                   left: `${balloon.x}px`,
-                  bottom: `${gameAreaRef.current?.offsetHeight ? gameAreaRef.current.offsetHeight - balloon.y : 0}px`,
-                  transform: balloon.popped ? 'scale(0.2)' : 'scale(1)',
-                  opacity: balloon.popped ? '0' : '1',
+                  bottom: `${gameAreaRef.current ? gameAreaRef.current.offsetHeight - balloon.y : 0}px`,
                   transition: 'transform 0.3s, opacity 0.3s'
                 }}
-                onClick={() => !balloon.popped && popBalloon(balloon.id)}
+                onClick={() => !balloon.popped && gameActive && popBalloon(balloon.id)}
               >
                 {/* Balloon string */}
                 {!balloon.popped && (
