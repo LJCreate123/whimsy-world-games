@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Maze, Clock, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Map, Clock, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Layout/Navbar';
 
 interface Position {
@@ -35,7 +34,6 @@ const MazeSolver: React.FC = () => {
   const mazeRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   
-  // Load best times from localStorage
   useEffect(() => {
     const savedBestTimes = localStorage.getItem('mazeSolverBestTimes');
     if (savedBestTimes) {
@@ -43,7 +41,6 @@ const MazeSolver: React.FC = () => {
     }
   }, []);
   
-  // Timer effect
   useEffect(() => {
     if (gameActive) {
       timerRef.current = window.setInterval(() => {
@@ -58,7 +55,6 @@ const MazeSolver: React.FC = () => {
     };
   }, [gameActive]);
   
-  // Set up keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!gameActive) return;
@@ -89,7 +85,6 @@ const MazeSolver: React.FC = () => {
     };
   }, [gameActive, playerPosition, maze]);
   
-  // Check win condition
   useEffect(() => {
     if (gameActive && 
         playerPosition.x === goalPosition.x && 
@@ -99,17 +94,13 @@ const MazeSolver: React.FC = () => {
   }, [playerPosition, goalPosition, gameActive]);
 
   const startGame = () => {
-    // Generate maze based on level
     const size = Math.min(8 + (level - 1) * 2, 16);
     setMazeSize(size);
     
     const newMaze = generateMaze(size);
     setMaze(newMaze);
     
-    // Set player at start (top-left)
     setPlayerPosition({ x: 0, y: 0 });
-    
-    // Set goal at bottom-right
     setGoalPosition({ x: size - 1, y: size - 1 });
     
     setTimeElapsed(0);
@@ -126,7 +117,6 @@ const MazeSolver: React.FC = () => {
     setGameActive(false);
     if (timerRef.current) clearInterval(timerRef.current);
     
-    // Update best time for level
     const currentBest = bestTimes[level] || Infinity;
     if (timeElapsed < currentBest) {
       const updatedBestTimes = { ...bestTimes, [level]: timeElapsed };
@@ -149,7 +139,6 @@ const MazeSolver: React.FC = () => {
   };
 
   const generateMaze = (size: number): MazeCell[][] => {
-    // Initialize grid with walls
     const grid: MazeCell[][] = Array(size).fill(0).map(() => 
       Array(size).fill(0).map(() => ({
         top: true,
@@ -160,7 +149,6 @@ const MazeSolver: React.FC = () => {
       }))
     );
     
-    // Depth-first search maze generation algorithm (recursive backtracking)
     const stack: Position[] = [];
     const startX = 0;
     const startY = 0;
@@ -172,7 +160,6 @@ const MazeSolver: React.FC = () => {
       const current = stack[stack.length - 1];
       const { x, y } = current;
       
-      // Find all unvisited neighbors
       const neighbors: { direction: Direction; x: number; y: number }[] = [];
       
       if (y > 0 && !grid[y-1][x].visited) {
@@ -189,11 +176,9 @@ const MazeSolver: React.FC = () => {
       }
       
       if (neighbors.length > 0) {
-        // Choose a random neighbor
         const nextIndex = Math.floor(Math.random() * neighbors.length);
         const next = neighbors[nextIndex];
         
-        // Remove wall between current cell and chosen neighbor
         if (next.direction === 'up') {
           grid[y][x].top = false;
           grid[next.y][next.x].bottom = false;
@@ -208,16 +193,13 @@ const MazeSolver: React.FC = () => {
           grid[next.y][next.x].right = false;
         }
         
-        // Mark neighbor as visited and add to stack
         grid[next.y][next.x].visited = true;
         stack.push({ x: next.x, y: next.y });
       } else {
-        // Backtrack
         stack.pop();
       }
     }
     
-    // Reset visited property for later use
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         grid[y][x].visited = false;
@@ -235,7 +217,6 @@ const MazeSolver: React.FC = () => {
     let newY = y;
     let canMove = false;
     
-    // Check if there's a wall in the direction
     switch (direction) {
       case 'up':
         if (!maze[y][x].top) {
@@ -267,7 +248,6 @@ const MazeSolver: React.FC = () => {
       setPlayerPosition({ x: newX, y: newY });
       setMoves(prev => prev + 1);
       
-      // Mark visited cells for hint
       const newMaze = [...maze];
       newMaze[y][x].visited = true;
       setMaze(newMaze);
@@ -278,7 +258,6 @@ const MazeSolver: React.FC = () => {
     setShowHint(prev => !prev);
   };
 
-  // Format time as MM:SS
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
@@ -292,7 +271,7 @@ const MazeSolver: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-xl mx-auto">
           <div className="text-center mb-8">
-            <Maze className="h-16 w-16 text-cyan-500 mx-auto mb-4" />
+            <Map className="h-16 w-16 text-cyan-500 mx-auto mb-4" />
             <h1 className="text-4xl font-bold text-cyan-500 mb-2">Maze Solver</h1>
             <p className="text-gray-600">Navigate through the maze from start to finish!</p>
             
@@ -406,7 +385,6 @@ const MazeSolver: React.FC = () => {
               )}
             </div>
             
-            {/* Mobile controls */}
             {gameActive && (
               <div className="mt-6 max-w-xs mx-auto">
                 <div className="grid grid-cols-3 gap-2">

@@ -1,11 +1,10 @@
-
 import React from 'react';
 import Navbar from '@/components/Layout/Navbar';
 import GameCard from '@/components/Layout/GameCard';
 import { 
   Dices, Grid3X3, Brain, Gamepad2, BookOpen, Music, 
   Rabbit, Puzzle, Palette, HelpCircle, Bomb, Calculator,
-  Zap, Maze
+  Zap, Map
 } from 'lucide-react';
 
 const Index = () => {
@@ -110,7 +109,7 @@ const Index = () => {
       id: 'maze-solver',
       title: 'Maze Solver',
       description: 'Navigate through increasingly difficult mazes against the clock!',
-      icon: <Maze className="h-12 w-12" />,
+      icon: <Map className="h-12 w-12" />,
       path: '/maze-solver',
       color: 'bg-cyan-500'
     }
